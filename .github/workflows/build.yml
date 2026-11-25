@@ -23,8 +23,8 @@ jobs:
 
             git clone https://git.sr.ht/~bptato/chawan \$TTMP/chawan
             cd \$TTMP/chawan
-            make -j4 PREFIX=/data/data/com.termux/files/usr
-            make install PREFIX=/data/data/com.termux/files/usr DESTDIR=\$TTMP/staging
+            make -j4 DANGER_DISABLE_SANDBOX=1 PREFIX=/data/data/com.termux/files/usr
+            make install DANGER_DISABLE_SANDBOX=1 PREFIX=/data/data/com.termux/files/usr DESTDIR=\$TTMP/staging
 
             mkdir -p \$TTMP/staging/DEBIAN
             cat > \$TTMP/staging/DEBIAN/control <<'EOF'
