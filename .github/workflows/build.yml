@@ -19,11 +19,23 @@ jobs:
             export TTMP=/data/data/com.termux/files/usr/tmp
             mkdir -p \$TTMP
             pkg update -y
-            pkg install -y nim git make pkg-config openssl libssh2 brotli ncurses dpkg libandroid-glob
+            pkg install -y nim git make pkg-config openssl libssh2 brotli ncurses dpkg libandroid-glob file
 
             git clone https://git.sr.ht/~bptato/chawan \$TTMP/chawan
             cd \$TTMP/chawan
-            make -j4 DANGER_DISABLE_SANDBOX=1 PREFIX=/data/data/com.termux/files/usr
+
+            echo '--- Makefile chaseccomp lines ---'
+            grep -n chaseccomp Makefile || true
+            echo '--- lib/chaseccomp/Makefile ---'
+            cat lib/chaseccomp/Makefile || true
+
+            # DANGER_DISABLE_SANDBOX sozinho so desliga o sandbox no runtime,
+            # nao pula o build do chaseccomp. Patch pra pular ele de vez no Termux.
+            sed -i 's|lib/chaseccomp/chaseccomp.o||g' Makefile
+            grep -n chaseccomp Makefile || echo 'chaseccomp removido do Makefile'
+
+            # -j1 aqui: o chaseccomp tem race com -j4 e o read_nr as vezes e chamado antes de existir
+            make -j1 DANGER_DISABLE_SANDBOX=1 PREFIX=/data/data/com.termux/files/usr
             make install DANGER_DISABLE_SANDBOX=1 PREFIX=/data/data/com.termux/files/usr DESTDIR=\$TTMP/staging
 
             mkdir -p \$TTMP/staging/DEBIAN
