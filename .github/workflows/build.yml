@@ -14,10 +14,10 @@ jobs:
       - name: Build Chawan .deb inside Termux Docker
         run: |
           docker pull termux/termux-docker:aarch64
-          docker run --rm -v ${{ github.workspace }}:/data/data/com.termux/files/usr/tmp/out termux/termux-docker:aarch64 bash -c "
+          docker run --name chawan-build termux/termux-docker:aarch64 bash -c "
             set -e
             export TTMP=/data/data/com.termux/files/usr/tmp
-            mkdir -p \$TTMP \$TTMP/out
+            mkdir -p \$TTMP
             pkg update -y
             pkg install -y nim git make pkg-config openssl libssh2 brotli ncurses dpkg libandroid-glob file
 
@@ -43,10 +43,13 @@ jobs:
            with CSS, some JS support, and inline images.
           EOF
 
-            dpkg-deb --build \$TTMP/staging \$TTMP/out/chawan_0.5.3_aarch64.deb
-            ls -lh \$TTMP/out/
-            dpkg-deb --info \$TTMP/out/chawan_0.5.3_aarch64.deb
+            dpkg-deb --build \$TTMP/staging \$TTMP/chawan_0.5.3_aarch64.deb
+            ls -lh \$TTMP/chawan_0.5.3_aarch64.deb
+            dpkg-deb --info \$TTMP/chawan_0.5.3_aarch64.deb
           "
+          docker cp chawan-build:/data/data/com.termux/files/usr/tmp/chawan_0.5.3_aarch64.deb ./chawan_0.5.3_aarch64.deb
+          docker rm chawan-build
+          ls -lh ./chawan_0.5.3_aarch64.deb
 
       - uses: actions/upload-artifact@v4
         with:
