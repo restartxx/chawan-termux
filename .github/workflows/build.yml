@@ -16,16 +16,18 @@ jobs:
           docker pull termux/termux-docker:aarch64
           docker run --rm -v ${{ github.workspace }}:/out termux/termux-docker:aarch64 bash -c "
             set -e
+            export TTMP=/data/data/com.termux/files/usr/tmp
+            mkdir -p \$TTMP
             pkg update -y
             pkg install -y nim git make pkg-config openssl libssh2 brotli ncurses dpkg libandroid-glob
 
-            git clone https://git.sr.ht/~bptato/chawan /tmp/chawan
-            cd /tmp/chawan
+            git clone https://git.sr.ht/~bptato/chawan \$TTMP/chawan
+            cd \$TTMP/chawan
             make -j4 PREFIX=/data/data/com.termux/files/usr
-            make install PREFIX=/data/data/com.termux/files/usr DESTDIR=/tmp/staging
+            make install PREFIX=/data/data/com.termux/files/usr DESTDIR=\$TTMP/staging
 
-            mkdir -p /tmp/staging/DEBIAN
-            cat > /tmp/staging/DEBIAN/control <<'EOF'
+            mkdir -p \$TTMP/staging/DEBIAN
+            cat > \$TTMP/staging/DEBIAN/control <<'EOF'
           Package: chawan
           Version: 0.5.3
           Architecture: aarch64
@@ -38,7 +40,7 @@ jobs:
            with CSS, some JS support, and inline images.
           EOF
 
-            dpkg-deb --build /tmp/staging /out/chawan_0.5.3_aarch64.deb
+            dpkg-deb --build \$TTMP/staging /out/chawan_0.5.3_aarch64.deb
             ls -lh /out/
             dpkg-deb --info /out/chawan_0.5.3_aarch64.deb
           "
