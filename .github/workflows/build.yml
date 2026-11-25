@@ -14,27 +14,18 @@ jobs:
       - name: Build Chawan .deb inside Termux Docker
         run: |
           docker pull termux/termux-docker:aarch64
-          docker run --rm -v ${{ github.workspace }}:/out termux/termux-docker:aarch64 bash -c "
+          docker run --rm -v ${{ github.workspace }}:/data/data/com.termux/files/usr/tmp/out termux/termux-docker:aarch64 bash -c "
             set -e
             export TTMP=/data/data/com.termux/files/usr/tmp
-            mkdir -p \$TTMP
+            mkdir -p \$TTMP \$TTMP/out
             pkg update -y
             pkg install -y nim git make pkg-config openssl libssh2 brotli ncurses dpkg libandroid-glob file
 
             git clone https://git.sr.ht/~bptato/chawan \$TTMP/chawan
             cd \$TTMP/chawan
 
-            echo '--- Makefile chaseccomp lines ---'
-            grep -n chaseccomp Makefile || true
-            echo '--- lib/chaseccomp/Makefile ---'
-            cat lib/chaseccomp/Makefile || true
-
-            # DANGER_DISABLE_SANDBOX sozinho so desliga o sandbox no runtime,
-            # nao pula o build do chaseccomp. Patch pra pular ele de vez no Termux.
             sed -i 's|lib/chaseccomp/chaseccomp.o||g' Makefile
-            grep -n chaseccomp Makefile || echo 'chaseccomp removido do Makefile'
 
-            # -j1 aqui: o chaseccomp tem race com -j4 e o read_nr as vezes e chamado antes de existir
             make -j1 DANGER_DISABLE_SANDBOX=1 PREFIX=/data/data/com.termux/files/usr
             make install DANGER_DISABLE_SANDBOX=1 PREFIX=/data/data/com.termux/files/usr DESTDIR=\$TTMP/staging
 
@@ -52,9 +43,9 @@ jobs:
            with CSS, some JS support, and inline images.
           EOF
 
-            dpkg-deb --build \$TTMP/staging /out/chawan_0.5.3_aarch64.deb
-            ls -lh /out/
-            dpkg-deb --info /out/chawan_0.5.3_aarch64.deb
+            dpkg-deb --build \$TTMP/staging \$TTMP/out/chawan_0.5.3_aarch64.deb
+            ls -lh \$TTMP/out/
+            dpkg-deb --info \$TTMP/out/chawan_0.5.3_aarch64.deb
           "
 
       - uses: actions/upload-artifact@v4
